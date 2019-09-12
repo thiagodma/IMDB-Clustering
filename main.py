@@ -4,41 +4,36 @@ from scipy.cluster import hierarchy
 import time
 import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn.cluster import KMeans
+from sklearn import preprocessing
 
 X = np.load('X.npy')
+y = np.load('y.npy')
+with open("texts.txt", "rb") as fp:
+    texts = pickle.load(fp)
 
-#Clustering
-print('Começou a clusterização.')
+X = preprocessing.scale(X)
 
+X_aux = np.zeros((1,1200))
+for i in range(X.shape[0]):
+    Xi_norm = X[i,:]/np.linalg.norm(X[i,:])
+    Xi_norm.shape=(1,1200)
+    X_aux = np.append(X_aux,Xi_norm,axis=0)
+
+X_aux = np.delete(X_aux, (0), axis=0)
+
+clusters_por_cosseno = hierarchy.linkage(X_aux,"average", metric="cosine")
+#plt.figure()
+#dn = hierarchy.dendrogram(clusters_por_cosseno)
+#plt.savefig('dendogram.jpg')
+
+
+#kmeans = KMeans(n_clusters=2, random_state=0,)
+#id_clusters = kmeans.fit_predict(X_aux)
 
 clusters_por_cosseno = hierarchy.linkage(X,"average", metric="cosine")
-plt.figure()
-dn = hierarchy.dendrogram(clusters_por_cosseno)
-plt.savefig('dendogram.jpg')
-'''
-limite_dissimilaridade = 0.15
+limite_dissimilaridade = 1
 id_clusters = hierarchy.fcluster(clusters_por_cosseno, limite_dissimilaridade, criterion="distance")
-elpsd = time.time() - t
-print('Tempo para fazer a clusterização: ' + str(elpsd) + '\n')
-
-#Colocando o resultado em dataframes
-clusters = np.unique(id_clusters)
-n_normas = np.zeros(len(clusters)) #numero de normas pertencentes a uma cluster
-for cluster in clusters:
-    idxs = np.where(id_clusters == cluster) #a primeira cluster não é a 0 e sim a 1
-    n_normas[cluster-1] = len(idxs[0])
 
 
-tabela_macrotemas = pd.read_csv('Macrotemas_python.csv',sep='|').rename(columns={'Macrotema atual':'Macrotema_atual'})
-
-
-res_names = list(tabela_macrotemas['Citadora'])
-cluster_nnormas = pd.DataFrame(list(zip(clusters,n_normas)),columns=['cluster_id','n_normas'])
-cluster_norma = pd.DataFrame(list(zip(id_clusters,res_names)), columns=['cluster_id','Citadora'])
-
-macrotema_norma_ementa = tabela_macrotemas[['Assunto/Ementa','Macrotema_atual','Citadora']]
-
-
-out = pd.merge(cluster_norma,macrotema_norma_ementa)
-out.to_csv('out.csv',sep='|',index=False,encoding='utf-8')
-'''
+df = pd.DataFrame(list(zip(id_clusters,y)), columns=['cluster_id','text'])
