@@ -32,8 +32,17 @@ clusters_por_cosseno = hierarchy.linkage(X_aux,"average", metric="cosine")
 #id_clusters = kmeans.fit_predict(X_aux)
 
 clusters_por_cosseno = hierarchy.linkage(X,"average", metric="cosine")
-limite_dissimilaridade = 1
+limite_dissimilaridade = 1.05
 id_clusters = hierarchy.fcluster(clusters_por_cosseno, limite_dissimilaridade, criterion="distance")
 
+
+#Colocando o resultado em dataframes
+clusters = np.unique(id_clusters)
+n_normas = np.zeros(len(clusters)) #numero de normas pertencentes a uma cluster
+for cluster in clusters:
+    idxs = np.where(id_clusters == cluster) #a primeira cluster não é a 0 e sim a 1
+    n_normas[cluster-1] = len(idxs[0])
+
+cluster_nnormas = pd.DataFrame(list(zip(clusters,n_normas)),columns=['cluster_id','n_normas'])
 
 df = pd.DataFrame(list(zip(id_clusters,y)), columns=['cluster_id','text'])
