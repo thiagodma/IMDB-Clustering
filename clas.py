@@ -7,6 +7,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn import preprocessing
 from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import RandomForestClassifier
 
 X = np.load('X.npy')
 y = np.load('y.npy')
@@ -22,6 +23,7 @@ y_valid = y[799:]
 
 #import pdb; pdb.set_trace()
 
-clf = MLPClassifier(alpha=0.85)
+clf = RandomForestClassifier(n_estimators=20,max_depth=10)
 clf.fit(X_train,y_train)
 print(clf.score(X_valid,y_valid))
+fi = clf.feature_importances_
