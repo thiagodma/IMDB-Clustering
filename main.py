@@ -6,35 +6,43 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn import preprocessing
+import re
+from sklearn.ensemble import RandomForestClassifier
 
+#Loads the data
 X = np.load('X.npy')
 y = np.load('y.npy')
 with open("texts.txt", "rb") as fp:
     texts = pickle.load(fp)
 
+#Cleans the text so that it is more readable
+texts_clean = [re.sub(r'xxbos|xxmaj|xxunk|xxeos|','',text) for text in texts]
+
+#Normalizes to mean zero and std 1
 X = preprocessing.scale(X)
 
-X_aux = np.zeros((1,1200))
-for i in range(X.shape[0]):
-    Xi_norm = X[i,:]/np.linalg.norm(X[i,:])
-    Xi_norm.shape=(1,1200)
-    X_aux = np.append(X_aux,Xi_norm,axis=0)
+#I train a RandomForestClassifier so that i can discard the useless features
+X_train = X[0:799,:]
+y_train = y[0:799]
+X_valid= X[799:,:]
+y_valid = y[799:]
+clf = RandomForestClassifier(n_estimators=20,max_depth=10)
+clf.fit(X_train,y_train)
+print(clf.score(X_valid,y_valid))
+fi = clf.feature_importances_
 
-X_aux = np.delete(X_aux, (0), axis=0)
-
-clusters_por_cosseno = hierarchy.linkage(X_aux,"average", metric="cosine")
-#plt.figure()
-#dn = hierarchy.dendrogram(clusters_por_cosseno)
-#plt.savefig('dendogram.jpg')
-
-
-#kmeans = KMeans(n_clusters=2, random_state=0,)
-#id_clusters = kmeans.fit_predict(X_aux)
+idx = np.where(fi>0)[0]
+#I want all the features that had some relevance
+X = X[:,idx]
 
 clusters_por_cosseno = hierarchy.linkage(X,"average", metric="cosine")
-limite_dissimilaridade = 1.05
-id_clusters = hierarchy.fcluster(clusters_por_cosseno, limite_dissimilaridade, criterion="distance")
+plt.figure()
+dn = hierarchy.dendrogram(clusters_por_cosseno)
+plt.savefig('dendogram.jpg')
 
+
+limite_dissimilaridade = 1
+id_clusters = hierarchy.fcluster(clusters_por_cosseno, limite_dissimilaridade, criterion="distance")
 
 #Colocando o resultado em dataframes
 clusters = np.unique(id_clusters)
@@ -45,4 +53,4 @@ for cluster in clusters:
 
 cluster_nnormas = pd.DataFrame(list(zip(clusters,n_normas)),columns=['cluster_id','n_normas'])
 
-df = pd.DataFrame(list(zip(id_clusters,y)), columns=['cluster_id','text'])
+df = pd.DataFrame(list(zip(id_clusters,y,texts_clean)), columns=['cluster_id','y','text'])
