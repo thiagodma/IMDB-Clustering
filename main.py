@@ -36,12 +36,12 @@ idx = np.where(fi>0)[0]
 X = X[:,idx]
 
 clusters_por_cosseno = hierarchy.linkage(X,"average", metric="cosine")
-plt.figure()
-dn = hierarchy.dendrogram(clusters_por_cosseno)
-plt.savefig('dendogram.jpg')
+#plt.figure()
+#dn = hierarchy.dendrogram(clusters_por_cosseno)
+#plt.savefig('dendogram.jpg')
 
 
-limite_dissimilaridade = 1
+limite_dissimilaridade = 0.9
 id_clusters = hierarchy.fcluster(clusters_por_cosseno, limite_dissimilaridade, criterion="distance")
 
 #Colocando o resultado em dataframes
